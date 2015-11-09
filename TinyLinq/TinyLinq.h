@@ -21,15 +21,15 @@ namespace TinyLinq
 	public:
 		Range(const TIterator& _beg, const TIterator& _end)
 			:beg(_beg)
-			,end(_end)
-			,is_first_visit(true)
+			, end(_end)
+			, is_first_visit(true)
 		{}
 
 		bool next() //move forward and return true if the current iter is validate
 		{
 			if (beg == end) return false;
 			if (!is_first_visit)
-			{				
+			{
 				++beg;
 			}
 			is_first_visit = false;
@@ -40,23 +40,23 @@ namespace TinyLinq
 		{
 			return *beg;
 		}
-	
+
 	protected:
 		TIterator beg;
 		TIterator end;
 		bool is_first_visit;
 	};
 
-	template<typename TRange,typename TFunction>
-	class WhereRange 
-	{		
+	template<typename TRange, typename TFunction>
+	class WhereRange
+	{
 	public:
 		typedef typename TRange::value_type value_type;
 		typedef typename TRange::return_type return_type;
 
-		WhereRange(const TRange& _range,TFunction _predicate)
+		WhereRange(const TRange& _range, TFunction _predicate)
 			:range(_range)
-			,predicate(_predicate)
+			, predicate(_predicate)
 		{}
 
 		bool next()
@@ -89,10 +89,10 @@ namespace TinyLinq
 
 		typedef typename cleanup_type<decltype(dummy_function()(dummy_return_type()))>::type	value_type;
 		typedef typename value_type																return_type;
-		
+
 		SelectRange(const TRange& _range, TFunction _function)
 			:range(_range)
-			,function(_function)
+			, function(_function)
 		{}
 
 		bool next()
@@ -144,9 +144,9 @@ namespace TinyLinq
 		typedef typename TRange::value_type		value_type;
 		typedef typename TRange::return_type	return_type;
 
-		TakeRange(const TRange& _range,int _count)
+		TakeRange(const TRange& _range, int _count)
 			:range(_range)
-			,count(_count)
+			, count(_count)
 		{}
 
 		bool next()
@@ -160,7 +160,7 @@ namespace TinyLinq
 			{
 				return false;
 			}
-				
+
 		}
 
 		return_type front()
@@ -176,9 +176,9 @@ namespace TinyLinq
 	//all
 	//aggregate
 
-	
 
-	
+
+
 
 	template<typename TRange>
 	class linq
@@ -210,7 +210,7 @@ namespace TinyLinq
 
 		auto take(int count)->linq<TakeRange<TRange>>
 		{
-			auto result = TakeRange<TRange>(range,count);
+			auto result = TakeRange<TRange>(range, count);
 			return linq<TakeRange<TRange>>(result);
 		}
 
