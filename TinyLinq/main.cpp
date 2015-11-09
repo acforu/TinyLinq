@@ -3,12 +3,15 @@
 
 #include "stdafx.h"
 #include "TinyLinq.h"
+#include "gtest\gtest.h"
+
 #include <vector>
 #include <iostream>
 using namespace std;
 using namespace TinyLinq;
 
-int main()
+
+int main(int c, char* v[])
 {
 	int arr[] = { 1,2,3,4,5,6,7,8 };
 	std::vector<int> a(std::begin(arr),std::end(arr));
@@ -25,6 +28,7 @@ int main()
 		cout << *x << endl;
 	}
 
-    return 0;
+	::testing::InitGoogleTest(&c,v);
+	return RUN_ALL_TESTS();
 }
 

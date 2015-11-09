@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="gTest">
+      <UniqueIdentifier>{0f10a908-f72b-4837-a350-ab06887cc2e8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -20,6 +23,12 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\gtest\src\gtest-all.cc">
+      <Filter>gTest</Filter>
+    </ClCompile>
+    <ClCompile Include="testcase.cpp">
+      <Filter>gTest</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
