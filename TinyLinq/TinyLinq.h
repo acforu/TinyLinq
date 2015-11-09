@@ -172,46 +172,75 @@ namespace TinyLinq
 		int count;
 	};
 
-	//any
+
 	//all
-	//aggregate
-
-
-
-
 
 	template<typename TRange>
-	class linq
+	class Linq
 	{
 	public:
-		linq(const TRange& _range)
+		Linq(const TRange& _range)
 			:range(_range)
 		{}
 
 		template<typename TFunction>
-		auto where(const TFunction& predicate)->linq<WhereRange<TRange, TFunction>>
+		auto where(const TFunction& predicate)->Linq<WhereRange<TRange, TFunction>>
 		{
 			auto result = WhereRange<TRange, TFunction>(range, predicate);
-			return linq<WhereRange<TRange, TFunction>>(result);
+			return Linq<WhereRange<TRange, TFunction>>(result);
 		}
 
 		template<typename TFunction>
-		auto select(const TFunction& function)->linq<SelectRange<TRange, TFunction>>
+		auto select(const TFunction& function)->Linq<SelectRange<TRange, TFunction>>
 		{
 			auto result = SelectRange<TRange, TFunction>(range, function);
-			return linq<SelectRange<TRange, TFunction>>(result);
+			return Linq<SelectRange<TRange, TFunction>>(result);
 		}
 
 
-		auto ref()->linq<RefRange<TRange>>
+		auto ref()->Linq<RefRange<TRange>>
 		{
-			return linq<RefRange<TRange>>(range);
+			return Linq<RefRange<TRange>>(range);
 		}
 
-		auto take(int count)->linq<TakeRange<TRange>>
+		auto take(int count)->Linq<TakeRange<TRange>>
 		{
 			auto result = TakeRange<TRange>(range, count);
-			return linq<TakeRange<TRange>>(result);
+			return Linq<TakeRange<TRange>>(result);
+		}
+
+		template<typename TFunction>
+		auto aggregate(typename TRange::value_type init_value,const TFunction& function)
+			->typename TRange::value_type
+		{
+			while (range.next())
+			{
+				init_value = function(init_value,range.front());
+			}
+			return init_value;
+		}
+
+		//any
+		template<typename TFunction>
+		bool any(const TFunction& function)
+		{
+			while (range.next())
+			{
+				if(function(range.front()))
+					return true;
+			}
+			return false;
+		}
+
+		template<typename TFunction>
+		bool all(const TFunction& function)
+		{
+			while (range.next())
+			{
+				if(!function(range.front()))
+					return false;
+			}
+			return true;
 		}
 
 		auto to_vector()->std::vector<typename TRange::value_type>
@@ -229,11 +258,11 @@ namespace TinyLinq
 	};
 
 	template<typename TContainer>
-	auto from(const TContainer& container)->linq<Range<decltype(std::begin(container))>>
+	auto from(const TContainer& container)->Linq<Range<decltype(std::begin(container))>>
 	{
 		typedef decltype(std::begin(container)) TIterator;
 
 		auto range = Range<TIterator>(std::begin(container), std::end(container));
-		return linq<Range<TIterator>>(range);
+		return Linq<Range<TIterator>>(range);
 	}
 }

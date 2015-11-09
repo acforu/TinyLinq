@@ -1,5 +1,6 @@
 #include "gtest\gtest.h"
 #include "TinyLinq.h"
+#include <numeric>
 using namespace TinyLinq;
 using namespace std;
 
@@ -10,7 +11,9 @@ using namespace std;
 int test_int_array[] = {1,2,3,4,5,6,7,8,9,10,0};
 
 auto is_even = [=](int n){return n%2==0;};
+auto is_odd  = [=](int n) {return n%2==1;};
 auto double_it = [=](int n){return n*2;};
+auto add = [=](int a,int b){return a+b;};
 
 
 struct Person
@@ -66,4 +69,31 @@ TEST(test_ref,all)
 	}
 }
 
+TEST(test_take,all)
+{
+	int count = 3;
+	auto c = from(test_int_array).take(count).to_vector();
+	for (int i = 0; i < sizeof(test_int_array)/sizeof(int) && i < count; ++i)
+	{
+		EXPECT_EQ(test_int_array[i],c[i]);
+	}
+}
 
+TEST(test_aggregate,all)
+{
+	auto a = from(test_int_array).aggregate(0,add);
+	auto b = std::accumulate(std::begin(test_int_array),std::end(test_int_array),0);
+	EXPECT_EQ(a,b);
+}
+
+TEST(test_any,all)
+{
+	auto a = from(test_int_array).select(double_it).to_vector();
+	EXPECT_EQ(from(a).any(is_odd),false);
+}
+
+TEST(test_all,all)
+{
+	auto a = from(test_int_array).select(double_it).to_vector();
+	EXPECT_EQ(from(a).all(is_even),true);
+}
