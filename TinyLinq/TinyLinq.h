@@ -117,7 +117,9 @@ namespace TinyLinq
 		static typename TRange::return_type	dummy_return_type();
 		static TFunction					dummy_function();
 
-		typedef	typename cleanup_type<decltype(dummy_function()(dummy_return_type()))>::type				inner_data_type;
+		//typedef	typename cleanup_type<decltype(dummy_function()(dummy_return_type()))>::type				inner_data_type;
+		typedef	decltype(dummy_function()(dummy_return_type()))										raw_inner_data_type;
+		typedef	typename cleanup_type<raw_inner_data_type>::type												inner_data_type;
 		static inner_data_type				dummy_inner_data_type();
 
 		typedef decltype(std::begin(dummy_inner_data_type())) inner_data_iterator_type;
@@ -131,8 +133,8 @@ namespace TinyLinq
 		SelectManyRange(const TRange& _range, TFunction _function)
 			:range(_range)
 			,function(_function)
-			,inner_range(NULL)
-		{}
+		{
+		}
 
 		bool next()
 		{
@@ -143,16 +145,24 @@ namespace TinyLinq
 
 			if (range.next())
 			{
-				inner_data = function(range.front());
-				inner_range = new inner_range_type(std::begin(inner_data),std::end(inner_data));
+				if (std::is_reference<raw_inner_data_type>::value)
+				{
+					raw_inner_data_type ref = function(range.front());
+					//inner_range = std::make_shared<inner_range_type>(new inner_range_type(std::begin(ref),std::end(ref)));
+					//inner_range = ;
+				}
+				else
+				{
+
+					inner_data = std::make_shared<inner_data_type>(function(range.front()));
+					//inner_range = make_shared<inner_range_type>(std::begin(*inner_data),std::end(*inner_data));
+				}
+
 				return inner_range->next();
 			}
 
-			if (inner_range)
-			{
-				delete inner_range;
-			}
-			//need to free inner_range here
+			//inner_range.reset();			
+			//inner_data.reset();
 
 			return false;
 		}
@@ -162,10 +172,10 @@ namespace TinyLinq
 			return inner_range->front();
 		}
 	private:
-		TRange				range;
-		TFunction			function;
-		inner_range_type*	inner_range;
-		inner_data_type		inner_data;
+		TRange								range;
+		TFunction							function;
+		std::shared_ptr<inner_range_type>	inner_range;
+		std::shared_ptr<inner_data_type>	inner_data;
 	};
 
 	template<typename TRange>

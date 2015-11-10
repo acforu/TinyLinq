@@ -52,18 +52,47 @@ TEST(test_select,all)
 	EXPECT_EQ(c,result);
 }
 
-TEST(test_select_many,all)
+TEST(test_select_many,return_value)
 {
 	auto c = from(person_array)
 			.select_many([=](const Person& person){return (person.name);})
 			.to_vector();
 
+	//for(auto iter = c.begin();iter!=c.end();++iter)
+	//{
+	//	printf("%c",*iter);
+	//}
+	//printf("\n");
 
-	for(size_t i = 0; i < c.size(); ++i)
+	int length = 0;
+	for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)
 	{
-		printf("%c",c[i]);
+		length += person_array[i].name.length();	
 	}
-	//EXPECT_EQ(c,result);
+
+	EXPECT_EQ(c.size(),length);
+}
+
+
+TEST(test_select_many,return_ref)
+{
+	auto c = from(person_array)
+		.select_many([=](const Person& person)->const string& {return (person.name);})
+		.to_vector();
+
+	//for(auto iter = c.begin();iter!=c.end();++iter)
+	//{
+	//	printf("%c",*iter);
+	//}
+	//printf("\n");
+
+	int length = 0;
+	for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)
+	{
+		length += person_array[i].name.length();	
+	}
+
+	EXPECT_EQ(c.size(),length);
 }
 
 TEST(test_ref,all)
