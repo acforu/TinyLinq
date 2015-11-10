@@ -23,7 +23,7 @@ struct Person
 };
 
 Person fabio = {1,"fabio"};
-Person ivan = {2,"fabio"};
+Person ivan = {2,"ivan"};
 Person kidding = {3,"kidding"};
 Person person_array[] = {fabio,ivan,kidding};
 
@@ -50,6 +50,20 @@ TEST(test_select,all)
 		result.push_back(double_it(test_int_array[i]));
 	}
 	EXPECT_EQ(c,result);
+}
+
+TEST(test_select_many,all)
+{
+	auto c = from(person_array)
+			.select_many([=](const Person& person){return (person.name);})
+			.to_vector();
+
+
+	for(size_t i = 0; i < c.size(); ++i)
+	{
+		printf("%c",c[i]);
+	}
+	//EXPECT_EQ(c,result);
 }
 
 TEST(test_ref,all)

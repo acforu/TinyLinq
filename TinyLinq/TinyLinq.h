@@ -92,7 +92,7 @@ namespace TinyLinq
 
 		SelectRange(const TRange& _range, TFunction _function)
 			:range(_range)
-			, function(_function)
+			,function(_function)
 		{}
 
 		bool next()
@@ -109,7 +109,64 @@ namespace TinyLinq
 		TFunction function;
 	};
 
-	//ref
+
+	template<typename TRange, typename TFunction>
+	class SelectManyRange
+	{
+	public:
+		static typename TRange::return_type	dummy_return_type();
+		static TFunction					dummy_function();
+
+		typedef	typename cleanup_type<decltype(dummy_function()(dummy_return_type()))>::type				inner_data_type;
+		static inner_data_type				dummy_inner_data_type();
+
+		typedef decltype(std::begin(dummy_inner_data_type())) inner_data_iterator_type;
+
+		static inner_data_iterator_type dummy_inner_data_iterator_type();
+		typedef typename decltype(Range<inner_data_iterator_type>(dummy_inner_data_iterator_type(),dummy_inner_data_iterator_type()))		inner_range_type;
+
+		typedef typename inner_range_type::value_type														value_type;
+		typedef typename inner_range_type::return_type														return_type;
+
+		SelectManyRange(const TRange& _range, TFunction _function)
+			:range(_range)
+			,function(_function)
+			,inner_range(NULL)
+		{}
+
+		bool next()
+		{
+			if (inner_range && inner_range->next())
+			{
+				return true;
+			}
+
+			if (range.next())
+			{
+				inner_data = function(range.front());
+				inner_range = new inner_range_type(std::begin(inner_data),std::end(inner_data));
+				return inner_range->next();
+			}
+
+			if (inner_range)
+			{
+				delete inner_range;
+			}
+			//need to free inner_range here
+
+			return false;
+		}
+
+		return_type front()
+		{
+			return inner_range->front();
+		}
+	private:
+		TRange				range;
+		TFunction			function;
+		inner_range_type*	inner_range;
+		inner_data_type		inner_data;
+	};
 
 	template<typename TRange>
 	class RefRange
@@ -134,7 +191,8 @@ namespace TinyLinq
 		TRange range;
 	};
 
-	//take
+	
+
 	template<typename TRange>
 	class TakeRange
 	{
@@ -172,8 +230,7 @@ namespace TinyLinq
 		int count;
 	};
 
-
-	//all
+	
 
 	template<typename TRange>
 	class Linq
@@ -182,6 +239,10 @@ namespace TinyLinq
 		Linq(const TRange& _range)
 			:range(_range)
 		{}
+
+
+		typedef typename TRange::value_type		value_type;
+		typedef typename TRange::return_type	return_type;
 
 		template<typename TFunction>
 		auto where(const TFunction& predicate)->Linq<WhereRange<TRange, TFunction>>
@@ -197,6 +258,12 @@ namespace TinyLinq
 			return Linq<SelectRange<TRange, TFunction>>(result);
 		}
 
+		template<typename TFunction>
+		auto select_many(const TFunction& function)->Linq<SelectManyRange<TRange, TFunction>>
+		{
+			auto result = SelectManyRange<TRange, TFunction>(range, function);
+			return Linq<SelectManyRange<TRange, TFunction>>(result);
+		}
 
 		auto ref()->Linq<RefRange<TRange>>
 		{
@@ -253,7 +320,6 @@ namespace TinyLinq
 			return v;
 		}
 
-	private:
 		TRange range;
 	};
 
