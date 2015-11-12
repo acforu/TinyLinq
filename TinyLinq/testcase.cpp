@@ -27,6 +27,28 @@ Person ivan = {2,"ivan"};
 Person kidding = {3,"kidding"};
 Person person_array[] = {fabio,ivan,kidding};
 
+TEST(test_storage_range,copy_from)
+{
+	int test_int_array[] = {1,2,3,4,5,6,7,8,9,10,0};
+	std::vector<int> a(std::begin(test_int_array),std::end(test_int_array));
+	StorageRange<std::vector<int>> b(a);
+
+	if (b.next())
+	{
+		EXPECT_EQ(b.front(),a[0]);
+		++a[0];
+		EXPECT_NE(b.front(),a[0]);
+	}
+}
+
+TEST(test_storage_range,move_from)
+{
+	std::vector<int> a(std::begin(test_int_array),std::end(test_int_array));
+	StorageRange<std::vector<int>> b(std::move(a));
+
+	EXPECT_EQ(a.size(),0);
+}
+
 TEST(test_where,all)
 {
 	auto c = from(test_int_array).where(is_even).to_vector();

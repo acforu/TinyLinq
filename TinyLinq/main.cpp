@@ -10,7 +10,6 @@
 using namespace std;
 using namespace TinyLinq;
 
-
 int main(int c, char* v[])
 {
 	int arr[] = { 1,2,3,4,5,6,7,8 };
@@ -23,17 +22,14 @@ int main(int c, char* v[])
 	////auto w1 = to_where(r, [=](int a) {return a % 2 == 0; });
 	////auto w = to_where(w1, [=](int a) {return a % 4 == 0; });
 
-	
-	//StorageRange<std::vector<int>> a;
-
-	//StorageRange<std::vector<int>> b(a);
-
 
 	//for (; b.next();)
 	//{
 	//	cout << b.front() << " ";
 	//}
+
 	::testing::InitGoogleTest(&c,v);
-	return RUN_ALL_TESTS();
+	auto ret = RUN_ALL_TESTS();
+	return ret;
 }
 

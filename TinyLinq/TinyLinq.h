@@ -10,6 +10,15 @@ namespace TinyLinq
 		typedef typename std::remove_cv<typename std::remove_reference<TValue>::type>::type type;
 	};
 
+
+	template<typename TContainer>
+	class extract_iterator_type
+	{
+	public:
+		static const TContainer& dummy_container();
+		typedef typename decltype(std::begin(dummy_container())) type;
+	};
+
 	template<typename TIterator>
 	class Range
 	{
@@ -63,22 +72,19 @@ namespace TinyLinq
 	class StorageRange
 	{
 	public:		
-		static TContainer dummy_container();
-		//typedef decltype(std::begin(dummy_container())) iterator_type;
-		typedef typename TContainer::const_iterator iterator_type;
-		//typedef typename TContainer::iterator_type iterator_type;
-		//typedef Range<iterator_type> range_type;
+		typedef typename extract_iterator_type<TContainer>::type iterator_type;
+		typedef typename Range<iterator_type>::value_type	value_type;
+		typedef typename Range<iterator_type>::return_type	return_type;
 
-		static iterator_type dummy_iterator();
-		typedef decltype(*dummy_iterator())						raw_value_type;
-		typedef typename cleanup_type<raw_value_type>::type		value_type;
-		typedef const value_type&								return_type;
-
-
-		//typedef DebugClass<typename TContainer::const_iterator>  aa;
 	public:
 		StorageRange(const TContainer& _container)
 			:container(std::make_shared<TContainer>(_container))
+			,range(Range<iterator_type>(container->begin(), container->end()))
+		{			
+		}
+
+		StorageRange(TContainer&& _container)
+			:container(std::make_shared<TContainer>(std::move(_container)))
 			,range(Range<iterator_type>(container->begin(), container->end()))
 		{			
 		}
