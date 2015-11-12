@@ -49,6 +49,15 @@ TEST(test_storage_range,move_from)
 	EXPECT_EQ(a.size(),0);
 }
 
+
+TEST(from_copy,all)
+{
+	std::vector<int> a(std::begin(test_int_array),std::end(test_int_array));
+	auto b = from_copy(std::move(a));
+
+	EXPECT_EQ(a.size(),0);
+}
+
 TEST(test_where,all)
 {
 	auto c = from(test_int_array).where(is_even).to_vector();
@@ -76,46 +85,46 @@ TEST(test_select,all)
 
 TEST(test_select_many,return_value)
 {
-	//auto c = from(person_array)
-	//		.select_many([=](const Person& person){return (person.name);})
-	//		.to_vector();
+	auto c = from(person_array)
+			.select_many([=](const Person& person){return (person.name);})
+			.to_vector();
 
-	//for(auto iter = c.begin();iter!=c.end();++iter)
-	//{
-	//	printf("%c",*iter);
-	//}
-	//printf("\n");
+	for(auto iter = c.begin();iter!=c.end();++iter)
+	{
+		printf("%c",*iter);
+	}
+	printf("\n");
 
-	//int length = 0;
-	//for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)
-	//{
-	//	length += person_array[i].name.length();	
-	//}
+	int length = 0;
+	for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)
+	{
+		length += person_array[i].name.length();	
+	}
 
-	//EXPECT_EQ(c.size(),length);
+	EXPECT_EQ(c.size(),length);
 }
 
 
-//TEST(test_select_many,return_ref)
-//{
-//	auto c = from(person_array)
-//		.select_many([=](const Person& person)->const string& {return (person.name);})
-//		.to_vector();
-//
-//	//for(auto iter = c.begin();iter!=c.end();++iter)
-//	//{
-//	//	printf("%c",*iter);
-//	//}
-//	//printf("\n");
-//
-//	int length = 0;
-//	for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)
-//	{
-//		length += person_array[i].name.length();	
-//	}
-//
-//	EXPECT_EQ(c.size(),length);
-//}
+TEST(test_select_many,return_ref)
+{
+	auto c = from(person_array)
+		.select_many([=](const Person& person)->const string& {return (person.name);})
+		.to_vector();
+
+	for(auto iter = c.begin();iter!=c.end();++iter)
+	{
+		printf("%c",*iter);
+	}
+	printf("\n");
+
+	int length = 0;
+	for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)
+	{
+		length += person_array[i].name.length();	
+	}
+
+	EXPECT_EQ(c.size(),length);
+}
 
 TEST(test_ref,all)
 {
