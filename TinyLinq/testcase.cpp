@@ -83,10 +83,11 @@ TEST(test_select,all)
 	EXPECT_EQ(c,result);
 }
 
+
 TEST(test_select_many,return_value)
 {
 	auto c = from(person_array)
-			.select_many([=](const Person& person){return (person.name);})
+			.select_many([=](const Person& person)->string {return (person.name);})
 			.to_vector();
 
 	for(auto iter = c.begin();iter!=c.end();++iter)
@@ -108,7 +109,7 @@ TEST(test_select_many,return_value)
 TEST(test_select_many,return_ref)
 {
 	auto c = from(person_array)
-		.select_many([=](const Person& person)->const string& {return (person.name);})
+		.select_many([&](const Person& person)->const string& {return (person.name);})
 		.to_vector();
 
 	for(auto iter = c.begin();iter!=c.end();++iter)

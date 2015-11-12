@@ -183,10 +183,14 @@ namespace TinyLinq
 		static TFunction					dummy_function();
 
 		typedef	typename decltype(dummy_function()(dummy_return_type()))										inner_data_type;
+		typedef typename cleanup_type<inner_data_type>::type												clean_inner_data_type;
 		typedef	decltype(std::begin((dummy_function()(dummy_return_type()))))									inner_data_iterator_type;
 
 
-		typedef typename std::conditional<std::is_reference<decltype(dummy_function()(dummy_return_type()))>::value, Range<inner_data_iterator_type>, StorageRange<inner_data_type>>::type inner_range_type;
+		typedef typename std::conditional<
+			std::is_lvalue_reference<decltype(dummy_function()(dummy_return_type()))>::value,
+			Range<inner_data_iterator_type>,
+			StorageRange<clean_inner_data_type>>::type inner_range_type;
 	};
 
 	template<bool value>
@@ -235,8 +239,7 @@ namespace TinyLinq
 
 			if (range.next())
 			{
-				const auto& ref = function(range.front());
-				inner_range = gene_inner_range<std::is_reference<inner_data_type>::value>(ref);
+				inner_range = to_inner_range<std::is_lvalue_reference<inner_data_type>::value>(function(range.front()));
 				return inner_range->next();
 			}
 
@@ -245,15 +248,15 @@ namespace TinyLinq
 		}
 
 		template<bool value>
-		typename std::enable_if<value,std::shared_ptr<inner_range_type>>::type gene_inner_range(inner_data_type& ref)
+		typename std::enable_if<value,std::shared_ptr<inner_range_type>>::type to_inner_range(inner_data_type&& ref)
 		{
 			return make_shared<inner_range_type>(inner_range_type(std::begin(ref),std::end(ref)));
 		}
 
 		template<bool value>
-		typename std::enable_if<reverse_bool<value>::value,std::shared_ptr<inner_range_type>>::type gene_inner_range(inner_data_type& ref)
+		typename std::enable_if<reverse_bool<value>::value,std::shared_ptr<inner_range_type>>::type to_inner_range(inner_data_type&& ref)
 		{
-			return make_shared<inner_range_type>(ref);
+			return make_shared<inner_range_type>(std::move(ref));
 		}
 
 	
