@@ -31,7 +31,7 @@ TEST(test_storage_range,copy_from)
 {
 	int test_int_array[] = {1,2,3,4,5,6,7,8,9,10,0};
 	std::vector<int> a(std::begin(test_int_array),std::end(test_int_array));
-	StorageRange<std::vector<int>> b(a);
+	storage_range<std::vector<int>> b(a);
 
 	if (b.next())
 	{
@@ -44,7 +44,7 @@ TEST(test_storage_range,copy_from)
 TEST(test_storage_range,move_from)
 {
 	std::vector<int> a(std::begin(test_int_array),std::end(test_int_array));
-	StorageRange<std::vector<int>> b(std::move(a));
+	storage_range<std::vector<int>> b(std::move(a));
 
 	EXPECT_EQ(a.size(),0);
 }
@@ -90,11 +90,11 @@ TEST(test_select_many,return_value)
 			.select_many([=](const Person& person)->string {return (person.name);})
 			.to_vector();
 
-	for(auto iter = c.begin();iter!=c.end();++iter)
-	{
-		printf("%c",*iter);
-	}
-	printf("\n");
+	//for(auto iter = c.begin();iter!=c.end();++iter)
+	//{
+	//	printf("%c",*iter);
+	//}
+	//printf("\n");
 
 	int length = 0;
 	for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)
@@ -112,11 +112,11 @@ TEST(test_select_many,return_ref)
 		.select_many([&](const Person& person)->const string& {return (person.name);})
 		.to_vector();
 
-	for(auto iter = c.begin();iter!=c.end();++iter)
-	{
-		printf("%c",*iter);
-	}
-	printf("\n");
+	//for(auto iter = c.begin();iter!=c.end();++iter)
+	//{
+	//	printf("%c",*iter);
+	//}
+	//printf("\n");
 
 	int length = 0;
 	for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)

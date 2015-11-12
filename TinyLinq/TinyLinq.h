@@ -10,7 +10,6 @@ namespace TinyLinq
 		typedef typename std::remove_cv<typename std::remove_reference<TValue>::type>::type type;
 	};
 
-
 	template<typename TContainer>
 	class extract_iterator_type
 	{
@@ -18,7 +17,6 @@ namespace TinyLinq
 		static TContainer dummy_container();
 		typedef decltype(std::begin(dummy_container())) type;
 	};
-
 
 	template<typename TRange>
 	class extract_range_trait
@@ -29,7 +27,7 @@ namespace TinyLinq
 	};
 
 	template<typename TIterator>
-	class Range
+	class basic_range
 	{
 	public:
 		static TIterator get_iterator();
@@ -37,14 +35,13 @@ namespace TinyLinq
 		typedef typename cleanup_type<raw_value_type>::type		value_type;
 		typedef const value_type&								return_type;
 	public:
-		Range()
+		basic_range()
 			:beg(NULL)
 			,end(NULL)
 			,is_first_visit(true)
 		{
-
 		}
-		Range(const TIterator& _beg, const TIterator& _end)
+		basic_range(const TIterator& _beg, const TIterator& _end)
 			:beg(_beg)
 			,end(_end)
 			,is_first_visit(true)
@@ -67,35 +64,33 @@ namespace TinyLinq
 		}
 
 	protected:
-		TIterator beg;
-		TIterator end;
-		bool is_first_visit;
-
-		
+		TIterator	beg;
+		TIterator	end;
+		bool		is_first_visit;
 	};
 
 	template<class unknow>
 	class DebugClass;
 
 	template<typename TContainer>
-	class StorageRange
+	class storage_range
 	{
-	public:		
+	public:
 		typedef typename extract_iterator_type<TContainer>::type iterator_type;
-		typedef typename Range<iterator_type>::value_type	value_type;
-		typedef typename Range<iterator_type>::return_type	return_type;
+		typedef typename basic_range<iterator_type>::value_type	value_type;
+		typedef typename basic_range<iterator_type>::return_type	return_type;
 
 	public:
-		StorageRange(const TContainer& _container)
+		storage_range(const TContainer& _container)
 			:container(std::make_shared<TContainer>(_container))
-			,range(Range<iterator_type>(container->begin(), container->end()))
-		{			
+			,range(basic_range<iterator_type>(container->begin(), container->end()))
+		{
 		}
 
-		StorageRange(TContainer&& _container)
+		storage_range(TContainer&& _container)
 			:container(std::make_shared<TContainer>(std::move(_container)))
-			,range(Range<iterator_type>(container->begin(), container->end()))
-		{			
+			,range(basic_range<iterator_type>(container->begin(), container->end()))
+		{
 		}
 
 		bool next()
@@ -109,21 +104,20 @@ namespace TinyLinq
 		}
 
 	private:
-		std::shared_ptr<TContainer> container;
-		Range<iterator_type> range;
+		std::shared_ptr<TContainer>	container;
+		basic_range<iterator_type>	range;
 	};
 
 	template<typename TRange, typename TFunction>
-	class WhereRange
-	{
+	class where_range {
 	public:
-		typedef typename TRange::value_type value_type;
-		typedef typename TRange::return_type return_type;
+		typedef typename TRange::value_type		value_type;
+		typedef typename TRange::return_type	return_type;
 
-		WhereRange(const TRange& _range, TFunction _predicate)
+		where_range(const TRange& _range, TFunction _predicate)
 			:range(_range)
-			, predicate(_predicate)
-		{}
+			,predicate(_predicate) {
+		}
 
 		bool next()
 		{
@@ -140,14 +134,13 @@ namespace TinyLinq
 			return range.front();
 		}
 
-
 	private:
-		TRange range;
-		TFunction predicate;
+		TRange		range;
+		TFunction	predicate;
 	};
 
 	template<typename TRange, typename TFunction>
-	class SelectRange
+	class select_range
 	{
 	public:
 		static typename TRange::return_type	dummy_return_type();
@@ -156,7 +149,7 @@ namespace TinyLinq
 		typedef typename cleanup_type<decltype(dummy_function()(dummy_return_type()))>::type	value_type;
 		typedef typename value_type																return_type;
 
-		SelectRange(const TRange& _range, TFunction _function)
+		select_range(const TRange& _range, TFunction _function)
 			:range(_range)
 			,function(_function)
 		{}
@@ -171,10 +164,9 @@ namespace TinyLinq
 			return function(range.front());
 		}
 	private:
-		TRange range;
-		TFunction function;
+		TRange		range;
+		TFunction	function;
 	};
-
 
 	template<typename TRange, typename TFunction>
 	struct select_many_range_helper
@@ -186,17 +178,15 @@ namespace TinyLinq
 		typedef typename cleanup_type<inner_data_type>::type												clean_inner_data_type;
 		typedef	decltype(std::begin((dummy_function()(dummy_return_type()))))									inner_data_iterator_type;
 
-
-		typedef typename std::conditional<
+		typedef typename std::conditional <
 			std::is_lvalue_reference<decltype(dummy_function()(dummy_return_type()))>::value,
-			Range<inner_data_iterator_type>,
-			StorageRange<clean_inner_data_type>>::type inner_range_type;
+			basic_range<inner_data_iterator_type>,
+			storage_range < clean_inner_data_type >> ::type inner_range_type;
 	};
 
 	template<bool value>
 	struct reverse_bool
 	{
-
 	};
 
 	template<>
@@ -211,20 +201,18 @@ namespace TinyLinq
 		static const bool value = true;
 	};
 
-
-
 	template<typename TRange, typename TFunction>
-	class SelectManyRange
+	class select_many_range
 	{
 	public:
 
-		typedef	typename select_many_range_helper<TRange,TFunction>::inner_data_type										inner_data_type;
-		typedef	typename select_many_range_helper<TRange,TFunction>::inner_data_iterator_type							inner_data_iterator_type;
-		typedef	typename select_many_range_helper<TRange,TFunction>::inner_range_type							inner_range_type;
-	
+		typedef	typename select_many_range_helper<TRange, TFunction>::inner_data_type										inner_data_type;
+		typedef	typename select_many_range_helper<TRange, TFunction>::inner_data_iterator_type							inner_data_iterator_type;
+		typedef	typename select_many_range_helper<TRange, TFunction>::inner_range_type							inner_range_type;
+
 		typedef typename extract_range_trait<inner_range_type>::value_type value_type;
 		typedef typename extract_range_trait<inner_range_type>::return_type return_type;
-		SelectManyRange(const TRange& _range, TFunction _function)
+		select_many_range(const TRange& _range, TFunction _function)
 			:range(_range)
 			,function(_function)
 		{
@@ -243,23 +231,22 @@ namespace TinyLinq
 				return inner_range->next();
 			}
 
-			inner_range.reset();			
+			inner_range.reset();
 			return false;
 		}
 
 		template<bool value>
-		typename std::enable_if<value,std::shared_ptr<inner_range_type>>::type to_inner_range(inner_data_type&& ref)
+		typename std::enable_if<value, std::shared_ptr<inner_range_type>>::type to_inner_range(inner_data_type&& ref)
 		{
-			return make_shared<inner_range_type>(inner_range_type(std::begin(ref),std::end(ref)));
+			return make_shared<inner_range_type>(inner_range_type(std::begin(ref), std::end(ref)));
 		}
 
 		template<bool value>
-		typename std::enable_if<reverse_bool<value>::value,std::shared_ptr<inner_range_type>>::type to_inner_range(inner_data_type&& ref)
+		typename std::enable_if<reverse_bool<value>::value, std::shared_ptr<inner_range_type>>::type to_inner_range(inner_data_type&& ref)
 		{
 			return make_shared<inner_range_type>(std::move(ref));
 		}
 
-	
 		return_type front()
 		{
 			return inner_range->front();
@@ -271,12 +258,12 @@ namespace TinyLinq
 	};
 
 	template<typename TRange>
-	class RefRange
+	class ref_range
 	{
 	public:
 		typedef typename std::reference_wrapper<typename const TRange::value_type > value_type;
 		typedef value_type															return_type;
-		RefRange(const TRange& _range)
+		ref_range(const TRange& _range)
 			:range(_range)
 		{}
 
@@ -293,10 +280,8 @@ namespace TinyLinq
 		TRange range;
 	};
 
-	
-
 	template<typename TRange>
-	class TakeRange
+	class take_range
 	{
 	public:
 		static typename TRange::value_type dummy_value_type();
@@ -304,9 +289,9 @@ namespace TinyLinq
 		typedef typename TRange::value_type		value_type;
 		typedef typename TRange::return_type	return_type;
 
-		TakeRange(const TRange& _range, int _count)
+		take_range(const TRange& _range, int _count)
 			:range(_range)
-			, count(_count)
+			,count(_count)
 		{}
 
 		bool next()
@@ -320,7 +305,6 @@ namespace TinyLinq
 			{
 				return false;
 			}
-
 		}
 
 		return_type front()
@@ -328,63 +312,60 @@ namespace TinyLinq
 			return range.front();
 		}
 	private:
-		TRange range;
-		int count;
+		TRange	range;
+		int		count;
 	};
 
-	
-
 	template<typename TRange>
-	class Linq
+	class linq
 	{
 	public:
-		Linq(const TRange& _range)
+		linq(const TRange& _range)
 			:range(_range)
 		{}
-
 
 		typedef typename TRange::value_type		value_type;
 		typedef typename TRange::return_type	return_type;
 
 		template<typename TFunction>
-		auto where(const TFunction& predicate)->Linq<WhereRange<TRange, TFunction>>
+		auto where(const TFunction& predicate)->linq<where_range<TRange, TFunction>>
 		{
-			auto result = WhereRange<TRange, TFunction>(range, predicate);
-			return Linq<WhereRange<TRange, TFunction>>(result);
+			auto result = where_range<TRange, TFunction>(range, predicate);
+			return linq<where_range<TRange, TFunction>>(result);
 		}
 
 		template<typename TFunction>
-		auto select(const TFunction& function)->Linq<SelectRange<TRange, TFunction>>
+		auto select(const TFunction& function)->linq<select_range<TRange, TFunction>>
 		{
-			auto result = SelectRange<TRange, TFunction>(range, function);
-			return Linq<SelectRange<TRange, TFunction>>(result);
+			auto result = select_range<TRange, TFunction>(range, function);
+			return linq<select_range<TRange, TFunction>>(result);
 		}
 
 		template<typename TFunction>
-		auto select_many(const TFunction& function)->Linq<SelectManyRange<TRange, TFunction>>
+		auto select_many(const TFunction& function)->linq<select_many_range<TRange, TFunction>>
 		{
-			auto result = SelectManyRange<TRange, TFunction>(range, function);
-			return Linq<SelectManyRange<TRange, TFunction>>(result);
+			auto result = select_many_range<TRange, TFunction>(range, function);
+			return linq<select_many_range<TRange, TFunction>>(result);
 		}
 
-		auto ref()->Linq<RefRange<TRange>>
+		auto ref()->linq<ref_range<TRange>>
 		{
-			return Linq<RefRange<TRange>>(range);
+			return linq<ref_range<TRange>>(range);
 		}
 
-		auto take(int count)->Linq<TakeRange<TRange>>
+		auto take(int count)->linq<take_range<TRange>>
 		{
-			auto result = TakeRange<TRange>(range, count);
-			return Linq<TakeRange<TRange>>(result);
+			auto result = take_range<TRange>(range, count);
+			return linq<take_range<TRange>>(result);
 		}
 
 		template<typename TFunction>
-		auto aggregate(typename TRange::value_type init_value,const TFunction& function)
+		auto aggregate(typename TRange::value_type init_value, const TFunction& function)
 			->typename TRange::value_type
 		{
 			while (range.next())
 			{
-				init_value = function(init_value,range.front());
+				init_value = function(init_value, range.front());
 			}
 			return init_value;
 		}
@@ -395,7 +376,7 @@ namespace TinyLinq
 		{
 			while (range.next())
 			{
-				if(function(range.front()))
+				if (function(range.front()))
 					return true;
 			}
 			return false;
@@ -406,7 +387,7 @@ namespace TinyLinq
 		{
 			while (range.next())
 			{
-				if(!function(range.front()))
+				if (!function(range.front()))
 					return false;
 			}
 			return true;
@@ -426,19 +407,18 @@ namespace TinyLinq
 	};
 
 	template<typename TContainer>
-	auto from(const TContainer& container)->Linq<Range<decltype(std::begin(container))>>
+	auto from(const TContainer& container)->linq<basic_range<decltype(std::begin(container))>>
 	{
 		typedef decltype(std::begin(container)) TIterator;
 
-		auto range = Range<TIterator>(std::begin(container), std::end(container));
-		return Linq<Range<TIterator>>(range);
+		auto range = basic_range<TIterator>(std::begin(container), std::end(container));
+		return linq<basic_range<TIterator>>(range);
 	}
 
 	template<typename TContainer>
-	auto from_copy(TContainer&& container)->Linq<StorageRange<TContainer>>
+	auto from_copy(TContainer&& container)->linq<storage_range<TContainer>>
 	{
-		auto range = StorageRange<TContainer>(std::forward<TContainer>(container));
-		return Linq<StorageRange<TContainer>>(range);
+		auto range = storage_range<TContainer>(std::forward<TContainer>(container));
+		return linq<storage_range<TContainer>>(range);
 	}
-
 }
