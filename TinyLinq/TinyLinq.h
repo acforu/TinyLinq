@@ -284,8 +284,6 @@ namespace TinyLinq
 	class take_range
 	{
 	public:
-		static typename TRange::value_type dummy_value_type();
-
 		typedef typename TRange::value_type		value_type;
 		typedef typename TRange::return_type	return_type;
 
@@ -314,6 +312,48 @@ namespace TinyLinq
 	private:
 		TRange	range;
 		int		count;
+	};
+
+	template<typename TRange,typename TOtherRange>
+	class concat_range
+	{
+	public:
+		typedef typename TRange::value_type			value_type;
+		typedef typename TRange::return_type	return_type;
+
+		concat_range(const TRange& _range, const TOtherRange& _other_range)
+			:range(_range)
+			,other_range(_other_range)
+			,is_visit_first_range(true)
+		{}
+
+		bool next()
+		{
+			if (range.next())
+			{
+				return true;
+			}
+
+			if (other_range.next())
+			{
+				is_visit_first_range = false;
+				return true;
+			}
+
+			return false;		
+		}
+
+		return_type front()
+		{
+			if (is_visit_first_range)
+				return range.front();
+			else
+				return other_range.front();
+		}
+	private:
+		TRange		range;
+		TOtherRange	other_range;
+		bool		is_visit_first_range;
 	};
 
 	template<typename TRange>
@@ -346,6 +386,20 @@ namespace TinyLinq
 		{
 			auto result = select_many_range<TRange, TFunction>(range, function);
 			return linq<select_many_range<TRange, TFunction>>(result);
+		}
+
+		template<typename TOtherRange>
+		auto concat(const TOtherRange& other_range)->linq<concat_range<TRange, TOtherRange>>
+		{
+			auto result = concat_range<TRange, TOtherRange>(range,other_range);
+			return linq<concat_range<TRange, TOtherRange>>(result);
+		}
+
+		template<typename TIterator>
+		auto concat(const basic_range<TIterator>& other_range)->linq<concat_range<TRange, basic_range<TIterator>>>
+		{
+			auto result = concat_range<TRange, basic_range<TIterator>>(range, other_range);
+			return linq<concat_range<TRange, basic_range<TIterator>>>(result);
 		}
 
 		auto ref()->linq<ref_range<TRange>>
@@ -422,3 +476,15 @@ namespace TinyLinq
 		return linq<storage_range<TContainer>>(range);
 	}
 }
+
+
+//todo
+//concat
+//sequence_equal
+//join
+//order
+//reverse
+//distinct
+//union_with
+//intersect_with
+//except

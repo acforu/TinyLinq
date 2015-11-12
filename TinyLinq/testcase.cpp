@@ -8,7 +8,7 @@ using namespace std;
 	for (auto iter = std::begin(_container);iter!=std::end(_container);++iter)
 
 
-int test_int_array[] = {1,2,3,4,5,6,7,8,9,10,0};
+int test_int_array[] = {0,1,2,3,4,5,6,7,8,9,10};
 
 auto is_even = [=](int n){return n%2==0;};
 auto is_odd  = [=](int n) {return n%2==1;};
@@ -86,7 +86,7 @@ TEST(test_select,all)
 
 TEST(test_select_many,return_value)
 {
-	auto c = from(person_array)
+	auto a = from(person_array)
 			.select_many([=](const Person& person)->string {return (person.name);})
 			.to_vector();
 
@@ -96,19 +96,24 @@ TEST(test_select_many,return_value)
 	//}
 	//printf("\n");
 
-	int length = 0;
+	string b;
 	for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)
 	{
-		length += person_array[i].name.length();	
+		b += person_array[i].name;
 	}
 
-	EXPECT_EQ(c.size(),length);
+	EXPECT_EQ(a.size(),b.length());
+
+	for (size_t i = 0; i < a.size(); ++i)
+	{
+		EXPECT_EQ(a[i], b[i]);
+	}
 }
 
 
 TEST(test_select_many,return_ref)
 {
-	auto c = from(person_array)
+	auto a = from(person_array)
 		.select_many([&](const Person& person)->const string& {return (person.name);})
 		.to_vector();
 
@@ -118,13 +123,18 @@ TEST(test_select_many,return_ref)
 	//}
 	//printf("\n");
 
-	int length = 0;
-	for(int i = 0; i < sizeof(person_array)/sizeof(Person); ++i)
+	string b;
+	for (int i = 0; i < sizeof(person_array) / sizeof(Person); ++i)
 	{
-		length += person_array[i].name.length();	
+		b += person_array[i].name;
 	}
 
-	EXPECT_EQ(c.size(),length);
+	EXPECT_EQ(a.size(), b.length());
+
+	for (size_t i = 0; i < a.size(); ++i)
+	{
+		EXPECT_EQ(a[i], b[i]);
+	}
 }
 
 TEST(test_ref,all)
@@ -141,6 +151,30 @@ TEST(test_ref,all)
 	for (int i = 0; i < sizeof(test_int_array)/sizeof(int); ++i)
 	{
 		EXPECT_EQ(a[i].get(),b[i]);
+	}
+}
+
+
+TEST(test_concat, all)
+{
+	std::vector<int> a(std::begin(test_int_array), std::end(test_int_array));
+	auto b = from(a)
+		.where([](int v) {return v < 5; })
+		.concat(
+			from(a)
+			.where([](int v) {return v >= 5; })
+			.range)
+		.to_vector();
+
+
+
+	/*auto c = from(test_
+	auto d = a.insert(a.end(), b.begin(), b.end());*/
+
+	EXPECT_EQ(a.size(), b.size());
+	for (size_t i = 0; i < a.size(); ++i)
+	{
+		EXPECT_EQ(a[i], b[i]);
 	}
 }
 
