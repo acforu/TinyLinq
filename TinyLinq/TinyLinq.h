@@ -388,13 +388,18 @@ namespace TinyLinq
 			return linq<select_many_range<TRange, TFunction>>(result);
 		}
 
-		//template<typename TContainer>
-		//auto concat(const TContaine& container)->linq<concat_range<TRange, TOtherRange>>
-		//{
-		//	return concat(from(container));
-		//	//auto result = concat_range<TRange, TOtherRange>(range,other_range);
-		//	//return linq<concat_range<TRange, TOtherRange>>(result);
-		//}
+		template<typename TValue>
+		struct get_range_type_helper
+		{
+			typedef typename storage_range<std::vector<typename cleanup_type<TValue>::type>> type;
+		};
+
+		auto concat(const typename TRange::value_type value)->linq<concat_range<TRange, typename get_range_type_helper<typename TRange::value_type>::type>>
+		{
+			auto a = singleton(value);
+			auto b = concat(a);
+			return b;
+		}
 
 		template<typename TOtherRange>
 		auto concat(const linq<TOtherRange>& other_range)->linq<concat_range<TRange, TOtherRange>>
@@ -448,6 +453,31 @@ namespace TinyLinq
 			return true;
 		}
 
+		template<typename TOtherRange>
+		bool sequence_equal(linq<TOtherRange> other_range)
+		{
+			bool range_next = range.next();
+			bool other_range_next = other_range.range.next(); 
+
+		
+			while (range_next && other_range_next)
+			{
+				if (range.front() != other_range.range.front())
+				{
+					return false;
+				}
+				range_next = range.next();
+				other_range_next = other_range.range.next(); 
+			}
+
+			if (range_next!=other_range_next)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
 		auto to_vector()->std::vector<typename TRange::value_type>
 		{
 			std::vector<TRange::value_type> v;
@@ -491,6 +521,16 @@ namespace TinyLinq
 		std::vector<T> container(std::begin(_array),std::end(_array));
 		auto range = storage_range<std::vector<T>>(std::move(container));
 		return linq<storage_range<std::vector<T>>>(range);
+	}
+
+
+	template<typename TValue>
+	auto singleton(TValue&& value)->linq<storage_range<std::vector<typename cleanup_type<TValue>::type>>>
+	{
+		std::vector<typename cleanup_type<TValue>::type> container;
+		container.push_back(std::forward<TValue>(value));
+		auto range = storage_range<std::vector<typename cleanup_type<TValue>::type>>(std::move(container));
+		return linq<storage_range<std::vector<typename cleanup_type<TValue>::type>>>(range);
 	}
 }
 

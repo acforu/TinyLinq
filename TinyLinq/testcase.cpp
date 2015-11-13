@@ -183,16 +183,25 @@ TEST(test_concat, all)
 			)
 		.to_vector();
 
-
-
-	/*auto c = from(test_
-	auto d = a.insert(a.end(), b.begin(), b.end());*/
-
 	EXPECT_EQ(a.size(), b.size());
 	for (size_t i = 0; i < a.size(); ++i)
 	{
 		EXPECT_EQ(a[i], b[i]);
 	}
+
+
+	auto c = from(a)
+		.concat(singleton(1))
+		.concat(singleton(2))
+		.concat(3)
+		.to_vector();
+
+	std::vector<int> d = a;
+	d.push_back(1);
+	d.push_back(2);
+	d.push_back(3);
+
+	EXPECT_TRUE(from(c).sequence_equal(from(d)));
 }
 
 TEST(test_take,all)
