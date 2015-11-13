@@ -26,6 +26,15 @@ namespace TinyLinq
 		typedef typename TRange::return_type return_type;
 	};
 
+	template<typename TFunction, typename TArg>
+	struct extract_return_type
+	{
+		static TFunction	dummy_function();
+		static TArg			dummy_arg();
+
+		typedef decltype(dummy_function()(dummy_arg())) type;
+	};
+	
 	template<typename TIterator>
 	class basic_range
 	{
@@ -143,10 +152,8 @@ namespace TinyLinq
 	class select_range
 	{
 	public:
-		static typename TRange::return_type	dummy_return_type();
-		static TFunction					dummy_function();
-
-		typedef typename cleanup_type<decltype(dummy_function()(dummy_return_type()))>::type	value_type;
+		typedef typename extract_return_type<TFunction,typename TRange::return_type>::type						raw_value_type;
+		typedef typename cleanup_type<raw_value_type>::type												value_type;
 		typedef typename value_type																return_type;
 
 		select_range(const TRange& _range, TFunction _function)
@@ -171,15 +178,12 @@ namespace TinyLinq
 	template<typename TRange, typename TFunction>
 	struct select_many_range_helper
 	{
-		static typename TRange::return_type	dummy_return_type();
-		static TFunction					dummy_function();
-
-		typedef	typename decltype(dummy_function()(dummy_return_type()))										inner_data_type;
-		typedef typename cleanup_type<inner_data_type>::type												clean_inner_data_type;
-		typedef	decltype(std::begin((dummy_function()(dummy_return_type()))))									inner_data_iterator_type;
-
+		typedef typename extract_return_type<TFunction, typename TRange::return_type>::type						inner_data_type;
+		typedef typename cleanup_type<inner_data_type>::type													clean_inner_data_type;
+		typedef typename extract_iterator_type<inner_data_type>::type											inner_data_iterator_type;
+	
 		typedef typename std::conditional <
-			std::is_lvalue_reference<decltype(dummy_function()(dummy_return_type()))>::value,
+			std::is_lvalue_reference<inner_data_type>::value,
 			basic_range<inner_data_iterator_type>,
 			storage_range < clean_inner_data_type >> ::type inner_range_type;
 	};
