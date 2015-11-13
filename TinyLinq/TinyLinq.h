@@ -400,9 +400,7 @@ namespace TinyLinq
 
 		auto concat(const typename TRange::value_type value)->linq<concat_range<TRange, typename get_range_type_helper<typename TRange::value_type>::type>>
 		{
-			auto a = singleton(value);
-			auto b = concat(a);
-			return b;
+			return concat(singleton(value));			
 		}
 
 		template<typename TOtherRange>
@@ -427,9 +425,10 @@ namespace TinyLinq
 		auto aggregate(typename TRange::value_type init_value, const TFunction& function)
 			->typename TRange::value_type
 		{
-			while (range.next())
+			auto range_copy = range;
+			while (range_copy.next())
 			{
-				init_value = function(init_value, range.front());
+				init_value = function(init_value, range_copy.front());
 			}
 			return init_value;
 		}
@@ -438,9 +437,10 @@ namespace TinyLinq
 		template<typename TFunction>
 		bool any(const TFunction& function)
 		{
-			while (range.next())
+			auto range_copy = range;
+			while (range_copy.next())
 			{
-				if (function(range.front()))
+				if (function(range_copy.front()))
 					return true;
 			}
 			return false;
@@ -449,9 +449,10 @@ namespace TinyLinq
 		template<typename TFunction>
 		bool all(const TFunction& function)
 		{
-			while (range.next())
+			auto range_copy = range;
+			while (range_copy.next())
 			{
-				if (!function(range.front()))
+				if (!function(range_copy.front()))
 					return false;
 			}
 			return true;
@@ -460,17 +461,18 @@ namespace TinyLinq
 		template<typename TOtherRange>
 		bool sequence_equal(linq<TOtherRange> other_range)
 		{
-			bool range_next = range.next();
-			bool other_range_next = other_range.range.next(); 
+			auto range_copy = range;
 
+			bool range_next = range_copy.next();
+			bool other_range_next = other_range.range.next();
 		
 			while (range_next && other_range_next)
 			{
-				if (range.front() != other_range.range.front())
+				if (range_copy.front() != other_range.range.front())
 				{
 					return false;
 				}
-				range_next = range.next();
+				range_next = range_copy.next();
 				other_range_next = other_range.range.next(); 
 			}
 

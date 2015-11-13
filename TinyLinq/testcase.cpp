@@ -77,7 +77,11 @@ TEST(from,all)
 
 TEST(test_where,all)
 {
-	auto c = from(test_int_array).where(is_even).to_vector();
+	auto a = from(test_int_array);
+	auto c = a.where(is_even);
+	auto d = a.where(is_even);
+
+	EXPECT_TRUE(c.sequence_equal(d));
 
 	std::vector<int> result;
 	for(int i = 0; i < sizeof(test_int_array)/sizeof(int); ++i)
@@ -85,12 +89,15 @@ TEST(test_where,all)
 		if (is_even(test_int_array[i]))
 			result.push_back(test_int_array[i]);
 	}
-	EXPECT_EQ(c,result);
+
+	EXPECT_TRUE(c.sequence_equal(from(result)));
 }
 
 TEST(test_select,all)
 {
-	auto c = from(test_int_array).select(double_it).to_vector();
+	auto x = from(test_int_array);
+	auto y = x;
+	auto c = x.select(double_it).to_vector();
 
 	std::vector<int> result;
 	for(int i = 0; i < sizeof(test_int_array)/sizeof(int); ++i)
@@ -98,12 +105,15 @@ TEST(test_select,all)
 		result.push_back(double_it(test_int_array[i]));
 	}
 	EXPECT_EQ(c,result);
+	EXPECT_TRUE(x.sequence_equal(y));
 }
 
 
 TEST(test_select_many,return_value)
 {
-	auto a = from(person_array)
+	auto x = from(person_array);
+	auto y = x;
+	auto a = x
 			.select_many([=](const Person& person)->string {return (person.name);})
 			.to_vector();
 
@@ -125,12 +135,18 @@ TEST(test_select_many,return_value)
 	{
 		EXPECT_EQ(a[i], b[i]);
 	}
+
+	//auto xx = x.select([](const Person& p)->int {return p.id; }).to_vector();
+	//auto yy = y.select([](const Person& p)->int {return p.id; }).to_vector();
+	//EXPECT_TRUE(from(xx).sequence_equal(from(yy)));
 }
 
 
 TEST(test_select_many,return_ref)
 {
-	auto a = from(person_array)
+	auto x = from(person_array);
+	auto y = x;
+	auto a = x
 		.select_many([&](const Person& person)->const string& {return (person.name);})
 		.to_vector();
 
@@ -152,23 +168,30 @@ TEST(test_select_many,return_ref)
 	{
 		EXPECT_EQ(a[i], b[i]);
 	}
+
+	EXPECT_TRUE(x.sequence_equal(y));
 }
 
 TEST(test_ref,all)
 {
 	int test_int_array[] = {1,2,3,4,5,6,7,8,9,10,0};
-	auto a = from(test_int_array).ref().to_vector();
+	auto c = from(test_int_array);
+	auto a = c.ref().to_vector();
 	auto b = from(test_int_array).select(double_it).to_vector();
 
-	for (int i = 0; i < sizeof(test_int_array)/sizeof(int); ++i)
+	for (int i = 0; i < sizeof(test_int_array) / sizeof(int); ++i)
 	{
-		test_int_array[i] *=2;
+		test_int_array[i] *= 2;
+	}
+	for (int i = 0; i < sizeof(test_int_array) / sizeof(int); ++i)
+	{
+		EXPECT_EQ(a[i].get(), b[i]);
 	}
 
-	for (int i = 0; i < sizeof(test_int_array)/sizeof(int); ++i)
-	{
-		EXPECT_EQ(a[i].get(),b[i]);
-	}
+	auto d = c;
+	auto e = c.ref().to_vector();
+	EXPECT_TRUE(c.sequence_equal(d));
+
 }
 
 
@@ -193,42 +216,54 @@ TEST(test_concat, all)
 	auto c = from(a)
 		.concat(singleton(1))
 		.concat(singleton(2))
-		.concat(3)
-		.to_vector();
+		.concat(3);
+	//	.to_vector();
 
 	std::vector<int> d = a;
 	d.push_back(1);
 	d.push_back(2);
 	d.push_back(3);
 
-	EXPECT_TRUE(from(c).sequence_equal(from(d)));
+	auto e = from(d);
+
+	EXPECT_TRUE(c.sequence_equal(e));
+	EXPECT_TRUE(c.sequence_equal(e));
 }
 
 TEST(test_take,all)
 {
 	int count = 3;
-	auto c = from(test_int_array).take(count).to_vector();
+	auto a = from(test_int_array);
+	auto c = a.take(count).to_vector();
 	for (int i = 0; i < sizeof(test_int_array)/sizeof(int) && i < count; ++i)
 	{
 		EXPECT_EQ(test_int_array[i],c[i]);
 	}
+
+	EXPECT_TRUE(a.sequence_equal(from(test_int_array)));
 }
 
 TEST(test_aggregate,all)
 {
-	auto a = from(test_int_array).aggregate(0,add);
+	auto a = from(test_int_array);
+	auto c = a.aggregate(0,add);
 	auto b = std::accumulate(std::begin(test_int_array),std::end(test_int_array),0);
-	EXPECT_EQ(a,b);
+	EXPECT_EQ(b,c);
+	EXPECT_TRUE(a.sequence_equal(from(test_int_array)));
 }
 
 TEST(test_any,all)
 {
-	auto a = from(test_int_array).select(double_it).to_vector();
-	EXPECT_EQ(from(a).any(is_odd),false);
+	auto a = from(test_int_array).select(double_it);
+	auto b = a;
+	EXPECT_EQ(a.any(is_odd),false);
+	EXPECT_TRUE(a.sequence_equal(b));
 }
 
 TEST(test_all,all)
 {
-	auto a = from(test_int_array).select(double_it).to_vector();
-	EXPECT_EQ(from(a).all(is_even),true);
+	auto a = from(test_int_array).select(double_it);
+	auto b = a;
+	EXPECT_EQ(a.all(is_even),true);
+	EXPECT_TRUE(a.sequence_equal(b));
 }
