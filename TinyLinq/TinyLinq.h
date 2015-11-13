@@ -388,18 +388,19 @@ namespace TinyLinq
 			return linq<select_many_range<TRange, TFunction>>(result);
 		}
 
-		template<typename TOtherRange>
-		auto concat(const TOtherRange& other_range)->linq<concat_range<TRange, TOtherRange>>
-		{
-			auto result = concat_range<TRange, TOtherRange>(range,other_range);
-			return linq<concat_range<TRange, TOtherRange>>(result);
-		}
+		//template<typename TContainer>
+		//auto concat(const TContaine& container)->linq<concat_range<TRange, TOtherRange>>
+		//{
+		//	return concat(from(container));
+		//	//auto result = concat_range<TRange, TOtherRange>(range,other_range);
+		//	//return linq<concat_range<TRange, TOtherRange>>(result);
+		//}
 
-		template<typename TIterator>
-		auto concat(const basic_range<TIterator>& other_range)->linq<concat_range<TRange, basic_range<TIterator>>>
+		template<typename TOtherRange>
+		auto concat(const linq<TOtherRange>& other_range)->linq<concat_range<TRange, TOtherRange>>
 		{
-			auto result = concat_range<TRange, basic_range<TIterator>>(range, other_range);
-			return linq<concat_range<TRange, basic_range<TIterator>>>(result);
+			auto result = concat_range<TRange, TOtherRange>(range, other_range.range);
+			return linq<concat_range<TRange, TOtherRange>>(result);
 		}
 
 		auto ref()->linq<ref_range<TRange>>
@@ -469,11 +470,27 @@ namespace TinyLinq
 		return linq<basic_range<TIterator>>(range);
 	}
 
+
+	//template<typename TContainer>
+	//auto from(TContainer&& container)->linq<storage_range<TContainer>>
+	//{
+	//	auto range = storage_range<TContainer>(std::forward<TContainer>(container));
+	//	return linq<storage_range<TContainer>>(range);
+	//}
+
 	template<typename TContainer>
 	auto from_copy(TContainer&& container)->linq<storage_range<TContainer>>
 	{
 		auto range = storage_range<TContainer>(std::forward<TContainer>(container));
 		return linq<storage_range<TContainer>>(range);
+	}
+
+	template<typename T,size_t N>
+	auto from_copy(T(&_array)[N])->linq<storage_range<std::vector<T>>>
+	{
+		std::vector<T> container(std::begin(_array),std::end(_array));
+		auto range = storage_range<std::vector<T>>(std::move(container));
+		return linq<storage_range<std::vector<T>>>(range);
 	}
 }
 

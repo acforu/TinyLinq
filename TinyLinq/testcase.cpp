@@ -50,12 +50,29 @@ TEST(test_storage_range,move_from)
 }
 
 
-TEST(from_copy,all)
+TEST(from_copy,copy_vector)
 {
 	std::vector<int> a(std::begin(test_int_array),std::end(test_int_array));
 	auto b = from_copy(std::move(a));
 
 	EXPECT_EQ(a.size(),0);
+}
+
+
+TEST(from_copy,copy_array)
+{
+	auto b = from_copy(test_int_array).to_vector();
+	EXPECT_EQ(b.size(),sizeof(test_int_array)/sizeof(int));
+}
+
+TEST(from,all)
+{
+	std::vector<int> a(std::begin(test_int_array),std::end(test_int_array));
+	auto b = from(test_int_array).to_vector();
+	auto c = from(a).to_vector();
+
+	EXPECT_EQ(b.size(),sizeof(test_int_array)/sizeof(int));
+	EXPECT_EQ(c.size(),sizeof(test_int_array)/sizeof(int));
 }
 
 TEST(test_where,all)
@@ -163,7 +180,7 @@ TEST(test_concat, all)
 		.concat(
 			from(a)
 			.where([](int v) {return v >= 5; })
-			.range)
+			)
 		.to_vector();
 
 
