@@ -3,10 +3,6 @@ The C++ implementation of minimum useful set of LINQ
 
 ## Build status
 
-| [Windows][win-link] | 
-| :-----------------: | 
-| ![win-badge]        | 
+[![Build status](https://ci.appveyor.com/api/projects/status/4f9egwqnhtdwabeu/branch/master?svg=true)](https://ci.appveyor.com/project/acforu/tinylinq/branch/master)
 
-[win-badge]: https://ci.appveyor.com/api/projects/status/u658dcuwxo14a8m9/branch/master "AppVeyor build status"
-[win-link]:  https://ci.appveyor.com/project/acforu/TinyLinq/branch/master "AppVeyor build status"
 
