@@ -18,6 +18,15 @@ auto add = [=](int a,int b){return a+b;};
 
 struct Person
 {
+	bool operator == (const Person& rhs) const
+	{
+		return id == rhs.id && name == rhs.name;
+	}
+
+	bool operator != (const Person& rhs) const
+	{
+		return !(*this == rhs);
+	}
 	int			id;
 	std::string name;
 };
@@ -135,10 +144,7 @@ TEST(test_select_many,return_value)
 	{
 		EXPECT_EQ(a[i], b[i]);
 	}
-
-	//auto xx = x.select([](const Person& p)->int {return p.id; }).to_vector();
-	//auto yy = y.select([](const Person& p)->int {return p.id; }).to_vector();
-	//EXPECT_TRUE(from(xx).sequence_equal(from(yy)));
+	EXPECT_TRUE((x).sequence_equal((y)));
 }
 
 
