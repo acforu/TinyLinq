@@ -31,10 +31,28 @@ struct Person
 	std::string name;
 };
 
+struct PhoneNumber
+{
+	int id;
+	int num;
+};
+
 Person fabio = {1,"fabio"};
 Person ivan = {2,"ivan"};
 Person kidding = {3,"kidding"};
 Person person_array[] = {fabio,ivan,kidding};
+
+
+PhoneNumber phone_number_array[] =
+{
+	{1,500},
+	{1,501},
+	{2,600},
+	{3,700},
+	{3,701},
+	{4,800},
+	{4,801},
+};
 
 TEST(test_storage_range,copy_from)
 {
@@ -272,4 +290,35 @@ TEST(test_all,all)
 	auto b = a;
 	EXPECT_EQ(a.all(is_even),true);
 	EXPECT_TRUE(a.sequence_equal(b));
+}
+
+TEST(join, all)
+{
+	auto x = from(person_array);
+	auto y = x;
+	auto a = x
+		.join(
+			from(phone_number_array),
+			[](const Person& p) {return p.id; },
+			[](const PhoneNumber& phone) {return phone.id; },
+			[](const Person& p, const PhoneNumber& phone) {return make_pair<string, int>(p.name, phone.num); });
+
+
+	EXPECT_TRUE(x.sequence_equal(y));
+	
+	//auto vec = a.to_vector();
+	//for (auto iter = vec.begin(); iter != vec.end();++iter)
+	//{
+	//	printf("%s,%d\n", iter->first.c_str(), iter->second);
+	//}
+	 
+	auto b = from(phone_number_array)
+		.where([](const PhoneNumber& phone)
+	{
+		return from(person_array).any([=](const Person& p) {return p.id == phone.id; });
+	});
+
+	EXPECT_EQ(a.count(), b.count());
+	printf("%d", b.count());
+
 }

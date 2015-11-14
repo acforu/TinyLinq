@@ -2,6 +2,7 @@
 #include <type_traits>
 #include <functional>
 #include <vector>
+#include <map>
 namespace TinyLinq
 {
 	template<typename TValue>
@@ -32,7 +33,17 @@ namespace TinyLinq
 		static TFunction	dummy_function();
 		static TArg			dummy_arg();
 
-		typedef decltype(dummy_function()(dummy_arg())) type;
+		typedef decltype(dummy_function()(dummy_arg()))			type;
+	};
+
+	template<typename TFunction, typename TArg1, typename TArg2>
+	struct extract_return_type_2_args
+	{
+		static TFunction	dummy_function();
+		static TArg1		dummy_arg1();
+		static TArg2		dummy_arg2();
+
+		typedef decltype(dummy_function()(dummy_arg1(),dummy_arg2())) type;
 	};
 	
 	template<typename TIterator>
@@ -360,6 +371,103 @@ namespace TinyLinq
 		bool		is_visit_first_range;
 	};
 
+	template<
+		typename TRange,
+		typename TOtherRange,
+		typename TKeySelector,
+		typename TOtherKeySelector,
+		typename TCombiner>
+	class join_range
+	{
+	public:
+
+		typedef typename extract_return_type<TKeySelector,typename TRange::value_type>::type				raw_key_type;
+		typedef typename cleanup_type<raw_key_type>::type													key_type;
+		typedef typename extract_return_type<TOtherKeySelector,typename TOtherRange::value_type>::type		raw_other_key_type;
+		typedef typename cleanup_type<raw_other_key_type>::type												other_key_type;
+		typedef typename std::multimap<other_key_type, typename TOtherRange::value_type>					map_type;
+		typedef typename map_type::iterator																	map_iterator_type;
+		typedef typename extract_return_type_2_args<
+			TCombiner,
+			typename TRange::value_type,
+			typename TOtherRange::value_type>::type															return_type;
+		typedef typename cleanup_type<return_type>::type													value_type;
+
+
+		join_range(
+			const TRange&				_range,
+			const TOtherRange&			_other_range,
+			const TKeySelector&			_key_selector,
+			const TOtherKeySelector&	_other_key_selector,
+			const TCombiner&			_combiner)
+			:key_selector(_key_selector)
+			,other_key_selector(_other_key_selector)
+			,range(_range)
+			,other_range(_other_range)
+			,combiner(_combiner)
+			,is_first_visit(true)
+		{
+
+		}
+
+		bool next()
+		{
+			if (is_first_visit)
+			{
+				is_first_visit = false;
+				while (other_range.next())
+				{
+					auto value = other_range.front();
+					auto key = other_key_selector(value);
+					cache.insert(make_pair<key_type,TOtherRange::value_type>(std::move(key), std::move(value)));
+				}
+
+				cache_iterator = cache.end();
+			}
+
+			if (cache.empty())
+				return false;
+
+			if (cache_iterator != cache.end())
+			{
+				auto prev = cache_iterator;
+				++cache_iterator;
+				if (cache_iterator != cache.end() && prev->first == cache_iterator->first)
+				{
+					return true;
+				}				
+			}
+
+			while (range.next())
+			{
+				key_type key = key_selector(range.front());
+				cache_iterator = cache.find(key);
+				if (cache_iterator != cache.end())
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		return_type front()
+		{
+			return combiner(range.front(), cache_iterator->second);
+		}
+
+	private:
+		TKeySelector		key_selector;
+		TOtherKeySelector	other_key_selector;
+		TRange				range;
+		TOtherRange			other_range;
+		TCombiner			combiner;
+		bool				is_first_visit;
+		map_type			cache;
+		map_iterator_type	cache_iterator;
+	};
+
+
 	template<typename TRange>
 	class linq
 	{
@@ -367,6 +475,8 @@ namespace TinyLinq
 		linq(const TRange& _range)
 			:range(_range)
 		{}
+
+		//todo add move copy here
 
 		typedef typename TRange::value_type		value_type;
 		typedef typename TRange::return_type	return_type;
@@ -421,6 +531,33 @@ namespace TinyLinq
 			return linq<take_range<TRange>>(result);
 		}
 
+		template<typename TOtherRange,typename TKeySelector,typename TOtherKeySelector,typename TCombiner>
+		auto join(
+			const linq<TOtherRange>& other_range,
+			const TKeySelector& key_selector,
+			const TOtherKeySelector& other_key_selector,
+			const TCombiner& combinner)->
+			linq<join_range<
+			TRange,
+			TOtherRange,
+			TKeySelector,
+			TOtherKeySelector,
+			TCombiner >>
+		{
+			auto result = join_range<
+				TRange,
+				TOtherRange,
+				TKeySelector,
+				TOtherKeySelector,
+				TCombiner>(range, other_range.range, key_selector, other_key_selector, combinner);
+			return linq<join_range<
+					TRange,
+					TOtherRange,
+					TKeySelector,
+					TOtherKeySelector,
+					TCombiner >>(result);
+		}
+
 		template<typename TFunction>
 		auto aggregate(typename TRange::value_type init_value, const TFunction& function)
 			->typename TRange::value_type
@@ -458,6 +595,17 @@ namespace TinyLinq
 			return true;
 		}
 
+		size_t count()
+		{
+			size_t ret = 0;
+			auto range_copy = range;
+			while (range_copy.next())
+			{
+				++ret;
+			}
+			return ret;
+		}
+
 		template<typename TOtherRange>
 		bool sequence_equal(linq<TOtherRange> other_range)
 		{
@@ -487,15 +635,18 @@ namespace TinyLinq
 		auto to_vector()->std::vector<typename TRange::value_type>
 		{
 			std::vector<TRange::value_type> v;
-			while (range.next())
+			auto range_copy = range;
+			while (range_copy.next())
 			{
-				v.push_back(range.front());
+				v.push_back(range_copy.front());
 			}
 			return v;
 		}
 
 		TRange range;
 	};
+
+
 
 	template<typename TContainer>
 	auto from(const TContainer& container)->linq<basic_range<decltype(std::begin(container))>>
@@ -542,8 +693,6 @@ namespace TinyLinq
 
 
 //todo
-//concat
-//sequence_equal
 //join
 //order
 //reverse
