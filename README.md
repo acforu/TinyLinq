@@ -1,6 +1,8 @@
 # TinyLinq
 The C++ implementation of minimum useful set of LINQ
 
+## Build status
+
 | [Windows][win-link] | 
 | :-----------------: | 
 | ![win-badge]        | 
