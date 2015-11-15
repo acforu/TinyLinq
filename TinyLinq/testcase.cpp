@@ -206,7 +206,7 @@ TEST(test_ref,all)
 	for (int i = 0; i < sizeof(test_int_array) / sizeof(int); ++i)
 	{
 		test_int_array[i] *= 2;
-	}
+	}   
 	for (int i = 0; i < sizeof(test_int_array) / sizeof(int); ++i)
 	{
 		EXPECT_EQ(a[i].get(), b[i]);
@@ -238,8 +238,8 @@ TEST(test_concat, all)
 
 
 	auto c = from(a)
-		.concat(singleton(1))
-		.concat(singleton(2))
+		.concat(single(1))
+		.concat(single(2))
 		.concat(3);
 	//	.to_vector();
 

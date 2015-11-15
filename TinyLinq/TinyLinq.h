@@ -510,7 +510,7 @@ namespace TinyLinq
 
 		auto concat(const typename TRange::value_type value)->linq<concat_range<TRange, typename get_range_type_helper<typename TRange::value_type>::type>>
 		{
-			return concat(singleton(value));			
+			return concat(single(value));			
 		}
 
 		template<typename TOtherRange>
@@ -682,7 +682,7 @@ namespace TinyLinq
 
 
 	template<typename TValue>
-	auto singleton(TValue&& value)->linq<storage_range<std::vector<typename cleanup_type<TValue>::type>>>
+	auto single(TValue&& value)->linq<storage_range<std::vector<typename cleanup_type<TValue>::type>>>
 	{
 		std::vector<typename cleanup_type<TValue>::type> container;
 		container.push_back(std::forward<TValue>(value));
@@ -693,7 +693,6 @@ namespace TinyLinq
 
 
 //todo
-//join
 //order
 //reverse
 //distinct
