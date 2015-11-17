@@ -35,9 +35,9 @@ Person y = {2,"def"};
 Person z = {3,"ghij"};
 
 Person array[] = {x,y,z};
-	auto result = from(array)
-			.select_many([=](const Person& person)->string {return (person.name);})
-			.to_vector();
+auto result = from(array)
+	.select_many([=](const Person& person)->string {return (person.name);})
+	.to_vector();
 
 // result is a,b,c,d,e,f,g,h,i,j
 ```
@@ -45,10 +45,10 @@ Person array[] = {x,y,z};
 ### concat
 ```c++
 int array[] = {1,2,3};
-	auto c = from(array)
-		.concat(single(4))
-		.concat(5)
-		.to_vector();
+auto c = from(array)
+	.concat(single(4))
+	.concat(5)
+	.to_vector();
 
 // result is 1,2,3,4,5
 ```
@@ -56,9 +56,9 @@ int array[] = {1,2,3};
 ### take
 ```c++
 int array[] = {1,2,3,4,5};
-	auto c = from(array)
-		.take(3)
-		.to_vector();
+auto c = from(array)
+	.take(3)
+	.to_vector();
 
 // result is 1,2,3
 ```
