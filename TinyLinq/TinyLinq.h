@@ -8,7 +8,7 @@ namespace TinyLinq
 	template<typename TValue>
 	struct cleanup_type
 	{
-		typedef typename std::remove_cv<typename std::remove_reference<TValue>::type>::type type;
+		typedef typename std::decay<TValue>::type type;
 	};
 
 	template<typename TContainer>
@@ -199,23 +199,6 @@ namespace TinyLinq
 			storage_range < clean_inner_data_type >> ::type inner_range_type;
 	};
 
-	template<bool value>
-	struct reverse_bool
-	{
-	};
-
-	template<>
-	struct reverse_bool<true>
-	{
-		static const bool value = false;
-	};
-
-	template<>
-	struct reverse_bool<false>
-	{
-		static const bool value = true;
-	};
-
 	template<typename TRange, typename TFunction>
 	class select_many_range
 	{
@@ -242,7 +225,7 @@ namespace TinyLinq
 
 			if (range.next())
 			{
-				inner_range = to_inner_range<std::is_lvalue_reference<inner_data_type>::value>(function(range.front()));
+				inner_range = to_inner_range(function(range.front()), std::is_lvalue_reference<inner_data_type>());
 				return inner_range->next();
 			}
 
@@ -250,14 +233,12 @@ namespace TinyLinq
 			return false;
 		}
 
-		template<bool value>
-		typename std::enable_if<value, std::shared_ptr<inner_range_type>>::type to_inner_range(inner_data_type&& ref)
+		std::shared_ptr<inner_range_type> to_inner_range(inner_data_type&& ref,std::true_type)
 		{
 			return make_shared<inner_range_type>(inner_range_type(std::begin(ref), std::end(ref)));
 		}
 
-		template<bool value>
-		typename std::enable_if<reverse_bool<value>::value, std::shared_ptr<inner_range_type>>::type to_inner_range(inner_data_type&& ref)
+		std::shared_ptr<inner_range_type> to_inner_range(inner_data_type&& ref,std::false_type)
 		{
 			return make_shared<inner_range_type>(std::move(ref));
 		}
